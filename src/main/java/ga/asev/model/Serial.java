@@ -11,9 +11,9 @@ public class Serial {
     public Serial() {
     }
 
-    public Serial(String name, LocalDateTime lastUpdated) {
+    public Serial(String name, LocalDateTime publishDate) {
         this.name = name;
-        this.lastUpdated = lastUpdated;
+        this.publishDate = publishDate;
     }
 
     @Id
@@ -23,8 +23,8 @@ public class Serial {
     @Column
     private String name;
 
-    @Column(name = "LAST_UPDATED")
-    private LocalDateTime lastUpdated;
+    @Column
+    private LocalDateTime publishDate;
 
     public Integer getId() {
         return id;
@@ -42,12 +42,12 @@ public class Serial {
         this.name = name;
     }
 
-    public LocalDateTime getLastUpdated() {
-        return lastUpdated;
+    public LocalDateTime getPublishDate() {
+        return publishDate;
     }
 
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setPublishDate(LocalDateTime publishDate) {
+        this.publishDate = publishDate;
     }
 
     @Override

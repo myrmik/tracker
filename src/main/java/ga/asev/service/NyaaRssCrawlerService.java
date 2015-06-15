@@ -72,14 +72,14 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
 
         Collection<Optional<Serial>> values = items.stream()
                 .map(e -> new Serial(parseItemTitle(getItemTitle(e)), getItemDate(e)))
-                .collect(groupingBy(Serial::getName, maxBySerialLastUpdated()))
+                .collect(groupingBy(Serial::getName, maxBySerialPublishDate()))
                 .values();
 
         return values.stream().map(e -> e.orElse(null)).collect(toList());
     }
 
-    private Collector<Serial, ?, Optional<Serial>> maxBySerialLastUpdated() {
-        return Collectors.maxBy((o1, o2) -> o1.getLastUpdated().compareTo(o2.getLastUpdated()));
+    private Collector<Serial, ?, Optional<Serial>> maxBySerialPublishDate() {
+        return Collectors.maxBy((o1, o2) -> o1.getPublishDate().compareTo(o2.getPublishDate()));
     }
 
     private String parseEpisodeUrl(CurrentEpisode episode, String rss) {

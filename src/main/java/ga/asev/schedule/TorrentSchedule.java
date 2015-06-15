@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
 
-import static java.util.concurrent.TimeUnit.*;
-
 @Component
 public class TorrentSchedule extends BaseSchedule {
 
@@ -60,7 +58,7 @@ public class TorrentSchedule extends BaseSchedule {
         boolean downloaded = nyaaCrawlerService.downloadTorrent(episode, filePath);
         if (downloaded) {
             log.info("Episode was downloaded: " + episode);
-            episode.setDate(new Date());
+            episode.setLastUpdated(new Date());
             currentEpisodeDao.insertTorrent(episode);
             return true;
         }

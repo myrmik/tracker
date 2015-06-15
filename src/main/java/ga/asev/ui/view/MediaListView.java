@@ -1,7 +1,5 @@
 package ga.asev.ui.view;
 
-import com.vaadin.data.Property;
-import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
@@ -19,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @UIScope
 @SpringView(name = MediaListView.VIEW_NAME)
@@ -134,6 +130,7 @@ public class MediaListView extends VerticalLayout implements View {
 
         CurrentEpisode episode = new CurrentEpisode();
         episode.setName(value.getName());
+        episode.setPublishDate(value.getPublishDate());
         CurrentEpisode inserted = currentEpisodeDao.insertTorrent(episode);
         if (inserted != null) {
             refreshEpisodes();

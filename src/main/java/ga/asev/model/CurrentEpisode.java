@@ -2,6 +2,7 @@ package ga.asev.model;
 
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -18,7 +19,10 @@ public class CurrentEpisode {
     private int episode;
 
     @Column
-    private Date date;
+    private Date lastUpdated;
+
+    @Column
+    private LocalDateTime publishDate;
 
     @Override
     public String toString() {
@@ -55,12 +59,20 @@ public class CurrentEpisode {
         this.episode = episode;
     }
 
-    public Date getDate() {
-        return date;
+    public Date getLastUpdated() {
+        return lastUpdated;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    public LocalDateTime getPublishDate() {
+        return publishDate;
+    }
+
+    public void setPublishDate(LocalDateTime publishDate) {
+        this.publishDate = publishDate;
     }
 
     @Override
