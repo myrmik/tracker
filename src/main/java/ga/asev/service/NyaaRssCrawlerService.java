@@ -1,6 +1,7 @@
 package ga.asev.service;
 
 import ga.asev.dao.SerialDao;
+import ga.asev.env.TorrentProperties;
 import ga.asev.model.CurrentEpisode;
 import ga.asev.model.Serial;
 import org.jsoup.Jsoup;
@@ -15,14 +16,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static ga.asev.util.StringUtil.encodeUrl;
-import static ga.asev.util.StringUtil.isEmpty;
+import static ga.asev.util.ThreadUtil.sleepForDownload;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 
 @Service
@@ -30,7 +31,13 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
     private static final String TORRENT_OWNER = "HorribleSubs";
     private static final String TORRENT_QUALITY = "720p";
 
+    private static final String EP_PATTERN = String.format("(?i)(.*\\[%s\\].*-\\s+)(\\d+)(.*)", TORRENT_OWNER);
+
+
     public static final String RSS_URL_SEARCH_PREFIX = "http://www.nyaa.se/?page=rss&term=";
+
+    @Autowired
+    TorrentProperties torrentProperties;
 
     @Autowired
     DownloadService downloadService;
@@ -50,21 +57,30 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
     }
 
     @Override
-    public boolean downloadTorrent(CurrentEpisode episode, String filePath) {
-        String query = TORRENT_OWNER + " " + episode.getName() + " " + episode.getEpisodeString() + " " + TORRENT_QUALITY;
+    public int downloadTorrents(CurrentEpisode episode) {
+        String query = TORRENT_OWNER + " " + episode.getName() + " " + TORRENT_QUALITY;
         String url = RSS_URL_SEARCH_PREFIX + encodeUrl(query);
         String rss = downloadService.download(url);
-        if (rss == null)
-            return false;
+        if (rss == null) return 0;
 
-        String episodeUrl = parseEpisodeUrl(episode, rss);
+        List<Episode> episodes = parseEpisodes(episode, rss);
 
-        if (!isEmpty(episodeUrl)) {
-            downloadService.downloadToFile(episodeUrl, filePath);
-            return true;
+        if (!isEmpty(episodes)) {
+            downloadTorrents(episodes);
+            episode.setPublishDate(Episode.getMaxPubDate(episodes));
+            return episodes.size();
         }
 
-        return false;
+        return 0;
+    }
+
+    private void downloadTorrents(List<Episode> episodes) {
+        episodes.forEach(e -> {
+            String filePath = torrentProperties.getSavePath() + e.getEpisodeDesc() + ".torrent";
+            downloadService.downloadToFile(e.url, filePath);
+            log.info("Download episode: " + e.getEpisodeDesc());
+            sleepForDownload();
+        });
     }
 
     private List<Serial> parseSerials(String rss) {
@@ -82,25 +98,29 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         return Collectors.maxBy((o1, o2) -> o1.getPublishDate().compareTo(o2.getPublishDate()));
     }
 
-    private String parseEpisodeUrl(CurrentEpisode episode, String rss) {
+    private List<Episode> parseEpisodes(CurrentEpisode episode, String rss) {
         Elements items = getRssItems(rss);
 
         return items.stream()
-                .filter(elementsBy(episode))
-                .map(Element::ownText) // link
-                .findFirst().orElse(null);
+                .map(item -> toEpisode(item, episode.getName()))
+                .filter(e -> e.episode > episode.getEpisode())
+                .sorted((o1, o2) -> o1.episode.compareTo(o2.episode))
+                .collect(toList());
+    }
+
+    private Episode toEpisode(Element item, String epName) {
+        Episode episode = new Episode();
+        episode.name = epName;
+        String title = getItemTitle(item);
+        episode.episode = parseEpisode(title);
+        episode.pubDate = getItemDate(item);
+        episode.url = item.ownText();
+        return episode;
     }
 
     private Elements getRssItems(String rss) {
         Document doc = Jsoup.parse(rss);
         return doc.select("rss > channel > item");
-    }
-
-    private Predicate<Element> elementsBy(CurrentEpisode episode) {
-        return e -> {
-            String name = getItemTitle(e);
-            return isMatch(episode, name);
-        };
     }
 
     private String parseItemTitle(String title) {
@@ -125,10 +145,22 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         return e.select(name).first().text();
     }
 
-    private boolean isMatch(CurrentEpisode episode, String name) {
-        return !(episode == null || isEmpty(name))
-                && name.contains(TORRENT_OWNER)
-                && name.contains(episode.getName())
-                && name.contains(" " + episode.getEpisodeString() + " ");
+    private int parseEpisode(String title) {
+        return Integer.parseInt(title.replaceAll(EP_PATTERN, "$2"));
+    }
+
+    private static class Episode {
+        String name;
+        Integer episode;
+        String url;
+        LocalDateTime pubDate;
+
+        String getEpisodeDesc() {
+            return name + " - " + episode;
+        }
+
+        static LocalDateTime getMaxPubDate(List<Episode> episodes) {
+            return episodes.stream().max((o1, o2) -> o1.episode.compareTo(o2.episode)).orElse(null).pubDate;
+        }
     }
 }

@@ -45,13 +45,13 @@ public class MediaListView extends VerticalLayout implements View {
 
     private void configureMediaListGrid() {
         episodes.setContainerDataSource(new BeanItemContainer<>(CurrentEpisode.class));
-        episodes.setColumnOrder("name", "episodeString", "date");
+        episodes.setColumnOrder("name", "episodeString", "lastUpdated");
         episodes.removeColumn("id");
         episodes.removeColumn("episode");
 
         episodes.getColumn("name").setHeaderCaption("Episode Name");
         episodes.getColumn("episodeString").setHeaderCaption("Episode");
-        episodes.getColumn("date").setHeaderCaption("Date");
+        episodes.getColumn("lastUpdated").setHeaderCaption("Date");
 
         episodes.setSelectionMode(Grid.SelectionMode.SINGLE);
         episodes.addSelectionListener(e -> onEpisodeSelect((CurrentEpisode) episodes.getSelectedRow()));

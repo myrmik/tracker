@@ -19,7 +19,7 @@ public class CurrentEpisode {
     private int episode;
 
     @Column
-    private Date lastUpdated;
+    private LocalDateTime lastUpdated;
 
     @Column
     private LocalDateTime publishDate;
@@ -59,11 +59,11 @@ public class CurrentEpisode {
         this.episode = episode;
     }
 
-    public Date getLastUpdated() {
+    public LocalDateTime getLastUpdated() {
         return lastUpdated;
     }
 
-    public void setLastUpdated(Date lastUpdated) {
+    public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 
