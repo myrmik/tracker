@@ -3,7 +3,10 @@ package ga.asev.model;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
+
+import static ga.asev.util.DateUtil.formatPeriodTillNowTo;
+import static ga.asev.util.DateUtil.getProgressBetween;
+import static java.time.LocalDateTime.now;
 
 @Entity
 @Table(name="CURRENT_EPISODE")
@@ -23,6 +26,22 @@ public class CurrentEpisode {
 
     @Column
     private LocalDateTime publishDate;
+
+    public String getTimeLeft() {
+        if (getPublishDate() == null) return null;
+        if (expectedNextEpisodeDate().isBefore(now())) return null;
+        return formatPeriodTillNowTo(expectedNextEpisodeDate());
+    }
+
+    public Double getTimeLeftProgress() {
+        if (getPublishDate() == null) return null;
+        if (expectedNextEpisodeDate().isBefore(now())) return 1d;
+        return getProgressBetween(getPublishDate(), expectedNextEpisodeDate());
+    }
+
+    private LocalDateTime expectedNextEpisodeDate() {
+        return getPublishDate() == null ? null : getPublishDate().plusWeeks(1);
+    }
 
     @Override
     public String toString() {

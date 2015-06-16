@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
@@ -138,7 +140,8 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
     private LocalDateTime getItemDate(Element e) {
         String text = getItemProp(e, "pubDate");
         DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
-        return LocalDateTime.parse(text, formatter);
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(text, formatter);
+        return LocalDateTime.from(zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()));
     }
 
     private String getItemProp(Element e, String name) {

@@ -1,5 +1,6 @@
 package ga.asev.ui.view;
 
+import com.vaadin.data.sort.SortOrder;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
@@ -8,6 +9,7 @@ import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.*;
+import com.vaadin.ui.renderers.ProgressBarRenderer;
 import com.vaadin.ui.themes.ValoTheme;
 import ga.asev.dao.CurrentEpisodeDao;
 import ga.asev.dao.SerialDao;
@@ -17,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+
+import static com.vaadin.shared.data.sort.SortDirection.ASCENDING;
+import static java.util.Collections.singletonList;
 
 @UIScope
 @SpringView(name = MediaListView.VIEW_NAME)
@@ -45,13 +50,18 @@ public class MediaListView extends VerticalLayout implements View {
 
     private void configureMediaListGrid() {
         episodes.setContainerDataSource(new BeanItemContainer<>(CurrentEpisode.class));
-        episodes.setColumnOrder("name", "episodeString", "lastUpdated");
+        episodes.setColumnOrder("name", "episodeString", "timeLeft", "timeLeftProgress");
         episodes.removeColumn("id");
         episodes.removeColumn("episode");
         episodes.removeColumn("lastUpdated");
+        episodes.removeColumn("publishDate");
 
         episodes.getColumn("name").setHeaderCaption("Episode Name");
         episodes.getColumn("episodeString").setHeaderCaption("Episode");
+
+        episodes.getColumn("timeLeftProgress").setRenderer(new ProgressBarRenderer());
+
+        episodes.setSortOrder(singletonList(new SortOrder("publishDate", ASCENDING)));
 
         episodes.setSelectionMode(Grid.SelectionMode.SINGLE);
         episodes.addSelectionListener(e -> onEpisodeSelect((CurrentEpisode) episodes.getSelectedRow()));
