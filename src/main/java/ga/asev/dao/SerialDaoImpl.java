@@ -11,11 +11,19 @@ import static java.util.stream.Collectors.toList;
 public class SerialDaoImpl extends BaseDao<Integer, Serial> implements SerialDao {
     @Override
     public void insertSerials(List<Serial> serials) {
-        List<Serial> storedSerials = selectAllSerials();
         insertAll(serials.stream()
-                .filter(s -> !storedSerials.contains(s))
+                .map(this::mergeSerial)
                 .collect(toList())
         );
+    }
+
+    private Serial mergeSerial(Serial serial) {
+        Serial storedSerial = selectByCriteria("name", serial.getName());
+        if (storedSerial != null) {
+            storedSerial.setPublishDate(serial.getPublishDate());
+            return storedSerial;
+        }
+        return serial;
     }
 
     @Override
