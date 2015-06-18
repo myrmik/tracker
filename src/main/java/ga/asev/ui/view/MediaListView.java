@@ -11,9 +11,9 @@ import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.*;
 import com.vaadin.ui.renderers.ProgressBarRenderer;
 import com.vaadin.ui.themes.ValoTheme;
-import ga.asev.dao.CurrentEpisodeDao;
+import ga.asev.dao.UserSerialDao;
 import ga.asev.dao.SerialDao;
-import ga.asev.model.CurrentEpisode;
+import ga.asev.model.UserSerial;
 import ga.asev.model.Serial;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -29,10 +29,10 @@ public class MediaListView extends VerticalLayout implements View {
     public static final String VIEW_NAME = "";
 
     private ComboBox serialCb = new ComboBox();
-    private Grid episodes = new Grid();
+    private Grid userSerials = new Grid();
 
     @Autowired
-    CurrentEpisodeDao currentEpisodeDao;
+    UserSerialDao userSerialDao;
 
     @Autowired
     SerialDao serialDao;
@@ -49,22 +49,27 @@ public class MediaListView extends VerticalLayout implements View {
     }
 
     private void configureMediaListGrid() {
-        episodes.setContainerDataSource(new BeanItemContainer<>(CurrentEpisode.class));
-        episodes.setColumnOrder("name", "episodeString", "timeLeft", "timeLeftProgress");
-        episodes.removeColumn("id");
-        episodes.removeColumn("episode");
-        episodes.removeColumn("lastUpdated");
-        episodes.removeColumn("publishDate");
+        userSerials.setContainerDataSource(new BeanItemContainer<>(UserSerial.class));
+        userSerials.setColumnOrder("name", "episodeString", "timeLeft", "timeLeftProgress");
+        userSerials.removeColumn("id");
+        userSerials.removeColumn("episode");
+        userSerials.removeColumn("lastUpdated");
+        userSerials.removeColumn("publishDate");
+        userSerials.removeColumn("serial");
 
-        episodes.getColumn("name").setHeaderCaption("Episode Name");
-        episodes.getColumn("episodeString").setHeaderCaption("Episode");
+        userSerials.getColumn("name").setHeaderCaption("Episode Name");
+        userSerials.getColumn("episodeString").setHeaderCaption("Episode");
 
-        episodes.getColumn("timeLeftProgress").setRenderer(new ProgressBarRenderer());
+        userSerials.getColumn("timeLeftProgress").setRenderer(new ProgressBarRenderer());
 
-        episodes.setSortOrder(singletonList(new SortOrder("publishDate", ASCENDING)));
+        userSerials.setSortOrder(singletonList(new SortOrder("publishDate", ASCENDING)));
 
-        episodes.setSelectionMode(Grid.SelectionMode.SINGLE);
-        episodes.addSelectionListener(e -> onEpisodeSelect((CurrentEpisode) episodes.getSelectedRow()));
+        userSerials.setSelectionMode(Grid.SelectionMode.SINGLE);
+        userSerials.addSelectionListener(e -> onEpisodeSelect((UserSerial) userSerials.getSelectedRow()));
+
+        userSerials.setEditorEnabled(true);
+        userSerials.getColumn("timeLeft").setEditable(false);
+        userSerials.getColumn("timeLeftProgress").setEditable(false);
 
         refreshEpisodes();
     }
@@ -75,7 +80,7 @@ public class MediaListView extends VerticalLayout implements View {
         serialCb.setFilteringMode(FilteringMode.CONTAINS);
         serialCb.setPageLength(8);
         serialCb.setNullSelectionAllowed(false);
-        serialCb.addValueChangeListener(e -> onSerialSelect((Serial)serialCb.getValue()));
+        serialCb.addValueChangeListener(e -> onSerialSelect((Serial) serialCb.getValue()));
 
         refreshSerials();
     }
@@ -111,9 +116,9 @@ public class MediaListView extends VerticalLayout implements View {
 
         addComponent(horizontalLayout);
 
-        addComponent(episodes);
-        episodes.setSizeFull();
-        setExpandRatio(episodes, 1);
+        addComponent(userSerials);
+        userSerials.setSizeFull();
+        setExpandRatio(userSerials, 1);
     }
 
     @Override
@@ -130,37 +135,37 @@ public class MediaListView extends VerticalLayout implements View {
     }
 
     private void refreshEpisodes() {
-        List<CurrentEpisode> torrents = currentEpisodeDao.selectAllTorrents();
-        episodes.setContainerDataSource(new BeanItemContainer<>(CurrentEpisode.class, torrents));
+        List<UserSerial> userSerials = userSerialDao.selectAllUserSerials();
+        this.userSerials.setContainerDataSource(new BeanItemContainer<>(UserSerial.class, userSerials));
     }
 
     public void addSerial(Button.ClickEvent event) {
-        Serial value = (Serial) serialCb.getValue();
-        if (value == null) return;
+        Serial serial = (Serial) serialCb.getValue();
+        if (serial == null) return;
 
-        CurrentEpisode episode = new CurrentEpisode();
-        episode.setName(value.getName());
-        episode.setPublishDate(value.getPublishDate());
-        CurrentEpisode inserted = currentEpisodeDao.insertTorrent(episode);
+        UserSerial userSerial = new UserSerial();
+        userSerial.setName(serial.getName());
+        userSerial.setSerial(serial);
+        UserSerial inserted = userSerialDao.insertUserSerial(userSerial);
         if (inserted != null) {
             refreshEpisodes();
-            Notification.show("Added '" + value.getName() + "'", Notification.Type.TRAY_NOTIFICATION);
+            Notification.show("Added '" + serial.getName() + "'", Notification.Type.TRAY_NOTIFICATION);
         }
     }
 
     public void delSerial(Button.ClickEvent event) {
-        CurrentEpisode episode = (CurrentEpisode) episodes.getSelectedRow();
-        if (episode == null) return;
+        UserSerial userSerial = (UserSerial) userSerials.getSelectedRow();
+        if (userSerial == null) return;
 
-        currentEpisodeDao.deleteTorrent(episode.getId());
+        userSerialDao.deleteUserSerial(userSerial.getId());
         refreshEpisodes();
-        Notification.show("Deleted '" + episode.getName() + "'", Notification.Type.TRAY_NOTIFICATION);
+        Notification.show("Deleted '" + userSerial.getName() + "'", Notification.Type.TRAY_NOTIFICATION);
     }
 
-    private void onEpisodeSelect(CurrentEpisode episode) {
-        if (episode == null) return;
-        serialCb.setValue(episode.getName());
-        serialCb.select(new Serial(episode.getName(), null));
+    private void onEpisodeSelect(UserSerial userSerial) {
+        if (userSerial == null) return;
+        serialCb.setValue(userSerial.getName());
+        serialCb.select(new Serial(userSerial.getName(), null));
     }
 
     private void onSerialSelect(Serial serial) {
@@ -169,11 +174,11 @@ public class MediaListView extends VerticalLayout implements View {
     }
 
     private void selectEpisodeBySerial(Serial serial) {
-        CurrentEpisode episode = (CurrentEpisode) episodes.getContainerDataSource().getItemIds()
-                .stream().filter(o -> ((CurrentEpisode) o).getName().equals(serial.getName()))
+        UserSerial episode = (UserSerial) userSerials.getContainerDataSource().getItemIds()
+                .stream().filter(o -> ((UserSerial) o).getName().equals(serial.getName()))
                 .findFirst().orElse(null);
         if (episode != null) {
-            episodes.select(episode);
+            userSerials.select(episode);
         }
     }
 }

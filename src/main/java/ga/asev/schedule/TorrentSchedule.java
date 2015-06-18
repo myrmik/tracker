@@ -1,7 +1,7 @@
 package ga.asev.schedule;
 
-import ga.asev.dao.CurrentEpisodeDao;
-import ga.asev.model.CurrentEpisode;
+import ga.asev.dao.UserSerialDao;
+import ga.asev.model.UserSerial;
 import ga.asev.service.NyaaCrawlerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,7 +22,7 @@ public class TorrentSchedule extends BaseSchedule {
     NyaaCrawlerService nyaaCrawlerService;
 
     @Autowired
-    CurrentEpisodeDao currentEpisodeDao;
+    UserSerialDao userSerialDao;
 
     @Scheduled(fixedDelay=UPDATE_SERIALS_DELAY)
     public void updateSerials() {
@@ -31,31 +31,31 @@ public class TorrentSchedule extends BaseSchedule {
 
     @Scheduled(fixedDelay=DOWNLOAD_DELAY)
     public void searchTorrents() {
-        List<CurrentEpisode> currentEpisodes = currentEpisodeDao.selectAllTorrents();
-        if (currentEpisodes == null) {
+        List<UserSerial> userSerials = userSerialDao.selectAllUserSerials();
+        if (userSerials == null) {
             log.info("There is no torrents to download");
             return;
         }
 
-        log.info("Started search for torrents, size: " + currentEpisodes.size());
+        log.info("Started search for torrents, size: " + userSerials.size());
         int downloadedNbr = 0;
-        for (CurrentEpisode episode : currentEpisodes) {
-            downloadedNbr += downloadTorrent(episode);
+        for (UserSerial userSerial : userSerials) {
+            downloadedNbr += downloadTorrent(userSerial);
             sleepForDownload();
-            log.info("Episodes were downloaded: " + downloadedNbr + ", last: " + episode);
+            log.info("Episodes were downloaded: " + downloadedNbr + ", last: " + userSerial);
         }
-        log.info("Finished search for torrents, size: " + currentEpisodes.size() + ", downloaded: " + downloadedNbr);
+        log.info("Finished search for torrents, size: " + userSerials.size() + ", downloaded: " + downloadedNbr);
     }
 
-    private int downloadTorrent(CurrentEpisode episode) {
-        int downloaded = nyaaCrawlerService.downloadTorrents(episode);
+    private int downloadTorrent(UserSerial userSerial) {
+        int downloaded = nyaaCrawlerService.downloadTorrents(userSerial);
         if (downloaded > 0) {
-            episode.setEpisode(episode.getEpisode() + downloaded); // increase # of episode
-            episode.setLastUpdated(LocalDateTime.now());
-            currentEpisodeDao.insertTorrent(episode);
+            userSerial.setEpisode(userSerial.getEpisode() + downloaded); // increase # of episode
+            userSerial.setLastUpdated(LocalDateTime.now());
+            userSerialDao.insertUserSerial(userSerial);
             return downloaded;
         }
-        log.info("There is no next episode for: " + episode);
+        log.info("There is no next episode for: " + userSerial);
         return 0;
     }
 }

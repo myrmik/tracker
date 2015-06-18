@@ -2,7 +2,7 @@ package ga.asev.service;
 
 import ga.asev.dao.SerialDao;
 import ga.asev.env.TorrentProperties;
-import ga.asev.model.CurrentEpisode;
+import ga.asev.model.UserSerial;
 import ga.asev.model.Serial;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -21,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import static ga.asev.util.DateUtil.zoneToLocal;
 import static ga.asev.util.StringUtil.encodeUrl;
 import static ga.asev.util.ThreadUtil.sleepForDownload;
 import static java.util.stream.Collectors.groupingBy;
@@ -59,17 +59,17 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
     }
 
     @Override
-    public int downloadTorrents(CurrentEpisode episode) {
-        String query = TORRENT_OWNER + " " + episode.getName() + " " + TORRENT_QUALITY;
+    public int downloadTorrents(UserSerial userSerial) {
+        String query = TORRENT_OWNER + " " + userSerial.getName() + " " + TORRENT_QUALITY;
         String url = RSS_URL_SEARCH_PREFIX + encodeUrl(query);
         String rss = downloadService.download(url);
         if (rss == null) return 0;
 
-        List<Episode> episodes = parseEpisodes(episode, rss);
+        List<Episode> episodes = parseEpisodes(userSerial, rss);
 
         if (!isEmpty(episodes)) {
             downloadTorrents(episodes);
-            episode.setPublishDate(Episode.getMaxPubDate(episodes));
+            userSerial.setPublishDate(Episode.getMaxPubDate(episodes));
             return episodes.size();
         }
 
@@ -100,12 +100,12 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         return Collectors.maxBy((o1, o2) -> o1.getPublishDate().compareTo(o2.getPublishDate()));
     }
 
-    private List<Episode> parseEpisodes(CurrentEpisode episode, String rss) {
+    private List<Episode> parseEpisodes(UserSerial userSerial, String rss) {
         Elements items = getRssItems(rss);
 
         return items.stream()
-                .map(item -> toEpisode(item, episode.getName()))
-                .filter(e -> e.episode > episode.getEpisode())
+                .map(item -> toEpisode(item, userSerial.getName()))
+                .filter(e -> e.episode > userSerial.getEpisode())
                 .sorted((o1, o2) -> o1.episode.compareTo(o2.episode))
                 .collect(toList());
     }
@@ -141,7 +141,7 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         String text = getItemProp(e, "pubDate");
         DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(text, formatter);
-        return LocalDateTime.from(zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()));
+        return zoneToLocal(zonedDateTime);
     }
 
     private String getItemProp(Element e, String name) {

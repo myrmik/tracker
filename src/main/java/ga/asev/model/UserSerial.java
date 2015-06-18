@@ -9,8 +9,8 @@ import static ga.asev.util.DateUtil.getProgressBetween;
 import static java.time.LocalDateTime.now;
 
 @Entity
-@Table(name="CURRENT_EPISODE")
-public class CurrentEpisode {
+@Table(name="USER_SERIAL")
+public class UserSerial {
     @Id
     @GeneratedValue
     private Integer id;
@@ -24,8 +24,9 @@ public class CurrentEpisode {
     @Column
     private LocalDateTime lastUpdated;
 
-    @Column
-    private LocalDateTime publishDate;
+    @OneToOne(fetch=FetchType.EAGER)
+    @JoinColumn(name="SERIAL_ID")
+    private Serial serial;
 
     public String getTimeLeft() {
         if (getPublishDate() == null) return null;
@@ -87,11 +88,19 @@ public class CurrentEpisode {
     }
 
     public LocalDateTime getPublishDate() {
-        return publishDate;
+        return serial.getPublishDate();
     }
 
     public void setPublishDate(LocalDateTime publishDate) {
-        this.publishDate = publishDate;
+        serial.setPublishDate(publishDate);
+    }
+
+    public Serial getSerial() {
+        return serial;
+    }
+
+    public void setSerial(Serial serial) {
+        this.serial = serial;
     }
 
     @Override
@@ -99,7 +108,7 @@ public class CurrentEpisode {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        CurrentEpisode episode = (CurrentEpisode) o;
+        UserSerial episode = (UserSerial) o;
 
         return !(name != null ? !name.equals(episode.name) : episode.name != null);
 

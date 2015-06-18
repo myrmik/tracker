@@ -1,8 +1,8 @@
 package ga.asev.service;
 
-import ga.asev.model.CurrentEpisode;
+import ga.asev.model.UserSerial;
 
 public interface NyaaCrawlerService {
-    int downloadTorrents(CurrentEpisode episode);
+    int downloadTorrents(UserSerial userSerial);
     void updateSerialList();
 }

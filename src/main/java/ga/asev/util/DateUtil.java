@@ -6,6 +6,9 @@ import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class DateUtil {
 
@@ -32,5 +35,10 @@ public class DateUtil {
         Duration beforeToNow = Duration.between(before, LocalDateTime.now());
         Duration beforeToAfter = Duration.between(before, after);
         return (double)beforeToNow.toMillis() / beforeToAfter.toMillis();
+    }
+
+    public static LocalDateTime zoneToLocal(ZonedDateTime zonedDateTime) {
+        if (zonedDateTime == null) return null;
+        return LocalDateTime.from(zonedDateTime.withZoneSameInstant(ZoneId.of("Europe/Kiev")));
     }
 }
