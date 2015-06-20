@@ -169,8 +169,4 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
             return episodes.stream().max((o1, o2) -> o1.episode.compareTo(o2.episode)).orElse(null).pubDate;
         }
     }
-
-    public static void main(String[] args) {
-        System.out.println();
-    }
 }
