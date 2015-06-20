@@ -75,6 +75,16 @@ public class UserSerial {
         return Integer.toString(episode);
     }
 
+    public void setEpisodeString(String episodeStr) {
+        int episode;
+        try {
+            episode = Integer.parseInt(episodeStr);
+        } catch (NumberFormatException e) {
+            return;
+        }
+        setEpisode(episode);
+    }
+
     public void setEpisode(int episode) {
         this.episode = episode;
     }
@@ -103,19 +113,7 @@ public class UserSerial {
         this.serial = serial;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        UserSerial episode = (UserSerial) o;
-
-        return !(name != null ? !name.equals(episode.name) : episode.name != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return name != null ? name.hashCode() : 0;
+    public String getOriginalName() {
+        return serial.getName();
     }
 }

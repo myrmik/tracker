@@ -1,7 +1,9 @@
 package ga.asev.ui.view;
 
+import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.sort.SortOrder;
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
@@ -11,16 +13,18 @@ import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.*;
 import com.vaadin.ui.renderers.ProgressBarRenderer;
 import com.vaadin.ui.themes.ValoTheme;
-import ga.asev.dao.UserSerialDao;
 import ga.asev.dao.SerialDao;
-import ga.asev.model.UserSerial;
+import ga.asev.dao.UserSerialDao;
 import ga.asev.model.Serial;
+import ga.asev.model.UserSerial;
+import ga.asev.ui.ext.PostCommitHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Objects;
 
-import static com.vaadin.shared.data.sort.SortDirection.ASCENDING;
+import static com.vaadin.shared.data.sort.SortDirection.DESCENDING;
 import static java.util.Collections.singletonList;
 
 @UIScope
@@ -30,6 +34,7 @@ public class MediaListView extends VerticalLayout implements View {
 
     private ComboBox serialCb = new ComboBox();
     private Grid userSerials = new Grid();
+    private BeanItemContainer<UserSerial> usContainer = new BeanItemContainer<>(UserSerial.class);
 
     @Autowired
     UserSerialDao userSerialDao;
@@ -49,20 +54,21 @@ public class MediaListView extends VerticalLayout implements View {
     }
 
     private void configureMediaListGrid() {
-        userSerials.setContainerDataSource(new BeanItemContainer<>(UserSerial.class));
+        userSerials.setContainerDataSource(usContainer);
         userSerials.setColumnOrder("name", "episodeString", "timeLeft", "timeLeftProgress");
         userSerials.removeColumn("id");
         userSerials.removeColumn("episode");
         userSerials.removeColumn("lastUpdated");
         userSerials.removeColumn("publishDate");
         userSerials.removeColumn("serial");
+        userSerials.removeColumn("originalName");
 
         userSerials.getColumn("name").setHeaderCaption("Episode Name");
         userSerials.getColumn("episodeString").setHeaderCaption("Episode");
 
         userSerials.getColumn("timeLeftProgress").setRenderer(new ProgressBarRenderer());
 
-        userSerials.setSortOrder(singletonList(new SortOrder("publishDate", ASCENDING)));
+        userSerials.setSortOrder(singletonList(new SortOrder("timeLeftProgress", DESCENDING)));
 
         userSerials.setSelectionMode(Grid.SelectionMode.SINGLE);
         userSerials.addSelectionListener(e -> onEpisodeSelect((UserSerial) userSerials.getSelectedRow()));
@@ -70,6 +76,8 @@ public class MediaListView extends VerticalLayout implements View {
         userSerials.setEditorEnabled(true);
         userSerials.getColumn("timeLeft").setEditable(false);
         userSerials.getColumn("timeLeftProgress").setEditable(false);
+        userSerials.getEditorFieldGroup().addCommitHandler(new PostCommitHandler(this::editSerial));
+        userSerials.getColumn("episodeString").getEditorField().addValidator(new RegexpValidator("\\d+", "number required"));
 
         refreshEpisodes();
     }
@@ -136,7 +144,14 @@ public class MediaListView extends VerticalLayout implements View {
 
     private void refreshEpisodes() {
         List<UserSerial> userSerials = userSerialDao.selectAllUserSerials();
-        this.userSerials.setContainerDataSource(new BeanItemContainer<>(UserSerial.class, userSerials));
+        usContainer.removeAllItems();
+        usContainer.addAll(userSerials);
+        usContainer.sort(new String[]{"timeLeftProgress"}, new boolean[]{false});
+    }
+
+    public void editSerial(FieldGroup.CommitEvent commitEvent) {
+        UserSerial editedItem = (UserSerial)userSerials.getEditedItemId();
+        userSerialDao.insertUserSerial(editedItem);
     }
 
     public void addSerial(Button.ClickEvent event) {
@@ -164,8 +179,7 @@ public class MediaListView extends VerticalLayout implements View {
 
     private void onEpisodeSelect(UserSerial userSerial) {
         if (userSerial == null) return;
-        serialCb.setValue(userSerial.getName());
-        serialCb.select(new Serial(userSerial.getName(), null));
+        serialCb.select(userSerial.getSerial());
     }
 
     private void onSerialSelect(Serial serial) {
@@ -174,11 +188,15 @@ public class MediaListView extends VerticalLayout implements View {
     }
 
     private void selectEpisodeBySerial(Serial serial) {
-        UserSerial episode = (UserSerial) userSerials.getContainerDataSource().getItemIds()
-                .stream().filter(o -> ((UserSerial) o).getName().equals(serial.getName()))
-                .findFirst().orElse(null);
+        UserSerial episode = getEpisodeBySerial(serial);
         if (episode != null) {
             userSerials.select(episode);
         }
+    }
+
+    private UserSerial getEpisodeBySerial(Serial serial) {
+        return (UserSerial) userSerials.getContainerDataSource().getItemIds()
+                    .stream().filter(o -> Objects.equals(((UserSerial) o).getSerial().getId(), serial.getId()))
+                    .findFirst().orElse(null);
     }
 }

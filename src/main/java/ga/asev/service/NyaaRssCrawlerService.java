@@ -60,7 +60,7 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
 
     @Override
     public int downloadTorrents(UserSerial userSerial) {
-        String query = TORRENT_OWNER + " " + userSerial.getName() + " " + TORRENT_QUALITY;
+        String query = TORRENT_OWNER + " " + userSerial.getOriginalName() + " " + TORRENT_QUALITY;
         String url = RSS_URL_SEARCH_PREFIX + encodeUrl(query);
         String rss = downloadService.download(url);
         if (rss == null) return 0;

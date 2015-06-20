@@ -11,7 +11,7 @@ public class UserSerialDaoImpl extends BaseDao<Integer, UserSerial> implements U
     @Override
     public UserSerial insertUserSerial(UserSerial userSerial) {
         if (userSerial == null)
-            throw new IllegalArgumentException("Book is null");
+            return null;
         if (userSerial.getId() != null || useSerialNotExists(userSerial)) {
             return insert(userSerial);
         }
