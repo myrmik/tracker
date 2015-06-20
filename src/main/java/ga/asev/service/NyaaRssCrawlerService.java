@@ -149,7 +149,10 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
     }
 
     private int parseEpisode(String title) {
-        return Integer.parseInt(title.replaceAll(EP_PATTERN, "$2"));
+        try {
+            return Integer.parseInt(title.replaceAll(EP_PATTERN, "$2"));
+        } catch (NumberFormatException ignored) {}
+        return 0;
     }
 
     private static class Episode {
@@ -165,5 +168,9 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         static LocalDateTime getMaxPubDate(List<Episode> episodes) {
             return episodes.stream().max((o1, o2) -> o1.episode.compareTo(o2.episode)).orElse(null).pubDate;
         }
+    }
+
+    public static void main(String[] args) {
+        System.out.println();
     }
 }
