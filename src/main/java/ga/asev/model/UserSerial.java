@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import static ga.asev.util.DateUtil.formatPeriodTillNowTo;
 import static ga.asev.util.DateUtil.getProgressBetween;
 import static java.time.LocalDateTime.now;
+import static javax.persistence.CascadeType.MERGE;
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REFRESH;
 
 @Entity
 @Table(name="USER_SERIAL")
@@ -24,7 +27,7 @@ public class UserSerial {
     @Column
     private LocalDateTime lastUpdated;
 
-    @OneToOne(fetch=FetchType.EAGER)
+    @OneToOne(fetch=FetchType.EAGER, cascade = {MERGE, REFRESH, PERSIST})
     @JoinColumn(name="SERIAL_ID")
     private Serial serial;
 
