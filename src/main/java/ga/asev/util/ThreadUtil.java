@@ -14,4 +14,8 @@ public class ThreadUtil {
             timeUnit.sleep(timeValue);
         } catch (InterruptedException ignored) {}
     }
+
+    public static void startThread(Runnable runnable) {
+        new Thread(runnable).start();
+    }
 }

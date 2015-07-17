@@ -1,17 +1,13 @@
 package ga.asev.schedule;
 
-import ga.asev.event.DownloadEvent;
 import ga.asev.dao.UserSerialDao;
-import ga.asev.dao.UserSerialNotificationDao;
-import ga.asev.model.NotificationType;
 import ga.asev.model.UserSerial;
-import ga.asev.model.UserSerialNotification;
 import ga.asev.service.NyaaCrawlerService;
+import ga.asev.service.UserSerialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static ga.asev.util.ThreadUtil.sleepForDownload;
@@ -29,10 +25,7 @@ public class TorrentSchedule extends BaseSchedule {
     UserSerialDao userSerialDao;
 
     @Autowired
-    UserSerialNotificationDao userSerialNotificationDao;
-
-    @Autowired
-    DownloadEvent downloadEvent;
+    UserSerialService userSerialService;
 
     @Scheduled(fixedDelay=UPDATE_SERIALS_DELAY)
     public void updateSerials() {
@@ -58,27 +51,6 @@ public class TorrentSchedule extends BaseSchedule {
     }
 
     private int downloadTorrent(UserSerial userSerial) {
-        int downloaded = nyaaCrawlerService.downloadTorrents(userSerial);
-        if (downloaded > 0) {
-            userSerial.setEpisode(userSerial.getEpisode() + downloaded); // increase # of episode
-            userSerial.setLastUpdated(LocalDateTime.now());
-            userSerialDao.insertUserSerial(userSerial);
-            notifyDownloaded(userSerial, downloaded);
-            return downloaded;
-        }
-        log.info("There is no next episode for: " + userSerial);
-        return 0;
-    }
-
-    private void notifyDownloaded(UserSerial userSerial, int downloaded) {
-        for (int i = userSerial.getEpisode() - downloaded + 1; i < userSerial.getEpisode(); i++) {
-            UserSerialNotification notification = new UserSerialNotification();
-            notification.setType(NotificationType.EPISODE_DOWNLOADED);
-            notification.setEpisode(i);
-            notification.setLastUpdated(LocalDateTime.now());
-            notification.setUserSerial(userSerial);
-            userSerialNotificationDao.insertNotification(notification);
-            downloadEvent.notifyObservers(notification);
-        }
+        return userSerialService.downloadUserSerial(userSerial);
     }
 }

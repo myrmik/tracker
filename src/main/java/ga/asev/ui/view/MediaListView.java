@@ -13,15 +13,15 @@ import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.*;
 import com.vaadin.ui.renderers.ProgressBarRenderer;
 import com.vaadin.ui.themes.ValoTheme;
-import ga.asev.event.DownloadEvent;
 import ga.asev.dao.SerialDao;
 import ga.asev.dao.UserSerialDao;
+import ga.asev.event.DownloadEvent;
 import ga.asev.model.Serial;
 import ga.asev.model.UserSerial;
 import ga.asev.model.UserSerialNotification;
-import ga.asev.service.NyaaCrawlerService;
-import ga.asev.ui.ext.ViewDownloadListener;
+import ga.asev.service.UserSerialService;
 import ga.asev.ui.ext.PostCommitHandler;
+import ga.asev.ui.ext.ViewDownloadListener;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.vaadin.shared.data.sort.SortDirection.DESCENDING;
+import static ga.asev.util.ThreadUtil.startThread;
 import static java.util.Collections.singletonList;
 
 @UIScope
@@ -49,7 +50,7 @@ public class MediaListView extends VerticalLayout implements View {
     private SerialDao serialDao;
 
     @Autowired
-    private NyaaCrawlerService nyaaCrawlerService;
+    private UserSerialService userSerialService;
 
     @Autowired
     private DownloadEvent downloadEvent;
@@ -166,7 +167,9 @@ public class MediaListView extends VerticalLayout implements View {
     public void editSerial(FieldGroup.CommitEvent commitEvent) {
         UserSerial editedItem = (UserSerial)userSerials.getEditedItemId();
         userSerialDao.insertUserSerial(editedItem);
-        nyaaCrawlerService.downloadTorrents(editedItem);
+        startThread(() ->
+                userSerialService.downloadUserSerial(editedItem)
+        );
     }
 
     public void addSerial(Button.ClickEvent event) {

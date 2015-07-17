@@ -33,7 +33,7 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
     private static final String TORRENT_OWNER = "HorribleSubs";
     private static final String TORRENT_QUALITY = "720p";
 
-    private static final String EP_PATTERN = String.format("(?i)(.*\\[%s\\].*-\\s+)(\\d+)(.*)", TORRENT_OWNER);
+    private static final String EP_PATTERN = String.format("(?i).*\\[%s\\]\\s+(.*)\\s+-\\s+(\\d+)(.*)", TORRENT_OWNER);
 
 
     public static final String RSS_URL_SEARCH_PREFIX = "http://www.nyaa.se/?page=rss&term=";
@@ -104,16 +104,20 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         Elements items = getRssItems(rss);
 
         return items.stream()
-                .map(item -> toEpisode(item, userSerial.getName()))
-                .filter(e -> e.episode > userSerial.getEpisode())
+                .map(this::toEpisode)
+                .filter(e -> matchEpisode(userSerial, e))
                 .sorted((o1, o2) -> o1.episode.compareTo(o2.episode))
                 .collect(toList());
     }
 
-    private Episode toEpisode(Element item, String epName) {
+    private boolean matchEpisode(UserSerial userSerial, Episode e) {
+        return e.name.equals(userSerial.getOriginalName()) && e.episode > userSerial.getEpisode();
+    }
+
+    private Episode toEpisode(Element item) {
         Episode episode = new Episode();
-        episode.name = epName;
         String title = getItemTitle(item);
+        episode.name = parseName(title);
         episode.episode = parseEpisode(title);
         episode.pubDate = getItemDate(item);
         episode.url = item.ownText();
@@ -146,6 +150,10 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
 
     private String getItemProp(Element e, String name) {
         return e.select(name).first().text();
+    }
+
+    private String parseName(String title) {
+        return title.replaceAll(EP_PATTERN, "$1");
     }
 
     private int parseEpisode(String title) {
