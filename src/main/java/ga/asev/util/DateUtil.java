@@ -27,6 +27,10 @@ public class DateUtil {
                     .toFormatter();
 
     public static String formatPeriodTillNowTo(LocalDateTime time) {
+        if (time.isBefore(LocalDateTime.now())) {
+            Duration duration = Duration.between(time, LocalDateTime.now());
+            return "- " + dateFormat.print(new Period(duration.toMillis()).normalizedStandard());
+        }
         Duration duration = Duration.between(LocalDateTime.now(), time);
         return dateFormat.print(new Period(duration.toMillis()).normalizedStandard());
     }

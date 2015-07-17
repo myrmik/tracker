@@ -2,11 +2,12 @@ package ga.asev.model;
 
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name="SERIAL")
-public class Serial {
+public class Serial implements Serializable {
 
     public Serial() {
     }

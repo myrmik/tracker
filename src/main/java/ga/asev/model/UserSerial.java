@@ -2,6 +2,7 @@ package ga.asev.model;
 
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import static javax.persistence.CascadeType.ALL;
 
 @Entity
 @Table(name="USER_SERIAL")
-public class UserSerial {
+public class UserSerial implements Serializable {
     @Id
     @GeneratedValue
     private Integer id;

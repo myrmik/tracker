@@ -1,11 +1,12 @@
 package ga.asev.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "USER_SERIAL_NOTIFICATION")
-public class UserSerialNotification {
+public class UserSerialNotification implements Serializable {
     @Id
     @GeneratedValue
     private Integer id;
