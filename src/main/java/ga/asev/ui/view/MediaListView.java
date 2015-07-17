@@ -13,10 +13,14 @@ import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.*;
 import com.vaadin.ui.renderers.ProgressBarRenderer;
 import com.vaadin.ui.themes.ValoTheme;
+import ga.asev.event.DownloadEvent;
 import ga.asev.dao.SerialDao;
 import ga.asev.dao.UserSerialDao;
 import ga.asev.model.Serial;
 import ga.asev.model.UserSerial;
+import ga.asev.model.UserSerialNotification;
+import ga.asev.service.NyaaCrawlerService;
+import ga.asev.ui.ext.ViewDownloadListener;
 import ga.asev.ui.ext.PostCommitHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,11 +40,19 @@ public class MediaListView extends VerticalLayout implements View {
     private Grid userSerials = new Grid();
     private BeanItemContainer<UserSerial> usContainer = new BeanItemContainer<>(UserSerial.class);
 
-    @Autowired
-    UserSerialDao userSerialDao;
+    private ViewDownloadListener downloadListener = new ViewDownloadListener(this);
 
     @Autowired
-    SerialDao serialDao;
+    private UserSerialDao userSerialDao;
+
+    @Autowired
+    private SerialDao serialDao;
+
+    @Autowired
+    private NyaaCrawlerService nyaaCrawlerService;
+
+    @Autowired
+    private DownloadEvent downloadEvent;
 
     @PostConstruct
     void init() {
@@ -51,6 +63,8 @@ public class MediaListView extends VerticalLayout implements View {
     private void configureComponents() {
         configureSerialForm();
         configureMediaListGrid();
+        addAttachListener(event -> downloadEvent.addObserver(downloadListener));
+        addDetachListener(event -> downloadEvent.deleteObserver(downloadListener));
     }
 
     private void configureMediaListGrid() {
@@ -152,6 +166,7 @@ public class MediaListView extends VerticalLayout implements View {
     public void editSerial(FieldGroup.CommitEvent commitEvent) {
         UserSerial editedItem = (UserSerial)userSerials.getEditedItemId();
         userSerialDao.insertUserSerial(editedItem);
+        nyaaCrawlerService.downloadTorrents(editedItem);
     }
 
     public void addSerial(Button.ClickEvent event) {
@@ -161,8 +176,8 @@ public class MediaListView extends VerticalLayout implements View {
         UserSerial userSerial = new UserSerial();
         userSerial.setName(serial.getName());
         userSerial.setSerial(serial);
-        UserSerial inserted = userSerialDao.insertUserSerial(userSerial);
-        if (inserted != null) {
+        userSerial = userSerialDao.insertUserSerial(userSerial);
+        if (userSerial != null) {
             refreshEpisodes();
             Notification.show("Added '" + serial.getName() + "'", Notification.Type.TRAY_NOTIFICATION);
         }
@@ -198,5 +213,9 @@ public class MediaListView extends VerticalLayout implements View {
         return (UserSerial) userSerials.getContainerDataSource().getItemIds()
                     .stream().filter(o -> Objects.equals(((UserSerial) o).getSerial().getId(), serial.getId()))
                     .findFirst().orElse(null);
+    }
+
+    public void showNotification(UserSerialNotification notification) {
+        // todo
     }
 }

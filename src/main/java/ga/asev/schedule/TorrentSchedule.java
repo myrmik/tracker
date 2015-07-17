@@ -1,7 +1,11 @@
 package ga.asev.schedule;
 
+import ga.asev.event.DownloadEvent;
 import ga.asev.dao.UserSerialDao;
+import ga.asev.dao.UserSerialNotificationDao;
+import ga.asev.model.NotificationType;
 import ga.asev.model.UserSerial;
+import ga.asev.model.UserSerialNotification;
 import ga.asev.service.NyaaCrawlerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,6 +27,12 @@ public class TorrentSchedule extends BaseSchedule {
 
     @Autowired
     UserSerialDao userSerialDao;
+
+    @Autowired
+    UserSerialNotificationDao userSerialNotificationDao;
+
+    @Autowired
+    DownloadEvent downloadEvent;
 
     @Scheduled(fixedDelay=UPDATE_SERIALS_DELAY)
     public void updateSerials() {
@@ -53,9 +63,22 @@ public class TorrentSchedule extends BaseSchedule {
             userSerial.setEpisode(userSerial.getEpisode() + downloaded); // increase # of episode
             userSerial.setLastUpdated(LocalDateTime.now());
             userSerialDao.insertUserSerial(userSerial);
+            notifyDownloaded(userSerial, downloaded);
             return downloaded;
         }
         log.info("There is no next episode for: " + userSerial);
         return 0;
+    }
+
+    private void notifyDownloaded(UserSerial userSerial, int downloaded) {
+        for (int i = userSerial.getEpisode() - downloaded + 1; i < userSerial.getEpisode(); i++) {
+            UserSerialNotification notification = new UserSerialNotification();
+            notification.setType(NotificationType.EPISODE_DOWNLOADED);
+            notification.setEpisode(i);
+            notification.setLastUpdated(LocalDateTime.now());
+            notification.setUserSerial(userSerial);
+            userSerialNotificationDao.insertNotification(notification);
+            downloadEvent.notifyObservers(notification);
+        }
     }
 }
