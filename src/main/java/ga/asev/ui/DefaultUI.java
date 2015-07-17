@@ -1,5 +1,6 @@
 package ga.asev.ui;
 
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.server.VaadinRequest;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Theme("valo")
 @SpringUI
+@Push
 public class DefaultUI extends UI {
 
     @Autowired

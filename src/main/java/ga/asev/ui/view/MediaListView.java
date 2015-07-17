@@ -69,6 +69,7 @@ public class MediaListView extends VerticalLayout implements View {
     }
 
     private void configureMediaListGrid() {
+        userSerials.setImmediate(true);
         userSerials.setContainerDataSource(usContainer);
         userSerials.setColumnOrder("name", "episodeString", "timeLeft", "timeLeftProgress");
         userSerials.removeColumn("id");
@@ -77,6 +78,7 @@ public class MediaListView extends VerticalLayout implements View {
         userSerials.removeColumn("publishDate");
         userSerials.removeColumn("serial");
         userSerials.removeColumn("originalName");
+        userSerials.removeColumn("notifications");
 
         userSerials.getColumn("name").setHeaderCaption("Episode Name");
         userSerials.getColumn("episodeString").setHeaderCaption("Episode");
@@ -190,7 +192,7 @@ public class MediaListView extends VerticalLayout implements View {
         UserSerial userSerial = (UserSerial) userSerials.getSelectedRow();
         if (userSerial == null) return;
 
-        userSerialDao.deleteUserSerial(userSerial.getId());
+        userSerialService.deleteUserSerial(userSerial);
         refreshEpisodes();
         Notification.show("Deleted '" + userSerial.getName() + "'", Notification.Type.TRAY_NOTIFICATION);
     }
@@ -219,6 +221,8 @@ public class MediaListView extends VerticalLayout implements View {
     }
 
     public void showNotification(UserSerialNotification notification) {
+        refreshEpisodes();
+        Notification.show(notification.toString(), Notification.Type.TRAY_NOTIFICATION);
         // todo
     }
 }

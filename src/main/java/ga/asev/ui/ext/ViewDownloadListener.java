@@ -16,6 +16,7 @@ public class ViewDownloadListener implements Observer {
     @Override
     public void update(Observable o, Object arg) {
         UserSerialNotification notification = (UserSerialNotification) arg;
-        view.showNotification(notification);
+
+        view.getUI().access(() -> view.showNotification(notification));
     }
 }

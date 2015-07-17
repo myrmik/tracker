@@ -3,11 +3,12 @@ package ga.asev.model;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static ga.asev.util.DateUtil.formatPeriodTillNowTo;
 import static ga.asev.util.DateUtil.getProgressBetween;
 import static java.time.LocalDateTime.now;
-import static javax.persistence.CascadeType.*;
+import static javax.persistence.CascadeType.ALL;
 
 @Entity
 @Table(name="USER_SERIAL")
@@ -29,9 +30,13 @@ public class UserSerial {
     @JoinColumn(name="SERIAL_ID")
     private Serial serial;
 
+    @OneToMany(fetch=FetchType.EAGER, cascade = ALL, orphanRemoval = true)
+    @JoinColumn(name="USER_SERIAL_ID")
+    private List<UserSerialNotification> notifications;
+
     public String getTimeLeft() {
         if (getPublishDate() == null) return null;
-        if (expectedNextEpisodeDate().isBefore(now())) return null;
+//        if (expectedNextEpisodeDate().isBefore(now())) return null;
         return formatPeriodTillNowTo(expectedNextEpisodeDate());
     }
 
@@ -117,4 +122,13 @@ public class UserSerial {
     public String getOriginalName() {
         return serial.getName();
     }
+
+    public List<UserSerialNotification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<UserSerialNotification> notifications) {
+        this.notifications = notifications;
+    }
+
 }

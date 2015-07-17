@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 @Repository
 public class UserSerialDaoImpl extends BaseDao<Integer, UserSerial> implements UserSerialDao {
     @Override
@@ -28,7 +30,7 @@ public class UserSerialDaoImpl extends BaseDao<Integer, UserSerial> implements U
 
     @Override
     public List<UserSerial> selectAllUserSerials() {
-        return selectAll();
+        return selectAll().stream().distinct().collect(toList());
     }
 
     @Override

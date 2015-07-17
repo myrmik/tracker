@@ -26,6 +26,11 @@ public class UserSerialService extends BaseService {
     @Autowired
     DownloadEvent downloadEvent;
 
+    public void deleteUserSerial(UserSerial userSerial) {
+//        userSerial.getNotifications().clear();
+        userSerialDao.deleteUserSerial(userSerial.getId());
+    }
+
     public int downloadUserSerial(UserSerial userSerial) {
         int downloaded = nyaaCrawlerService.downloadTorrents(userSerial);
         if (downloaded > 0) {
@@ -40,7 +45,7 @@ public class UserSerialService extends BaseService {
     }
 
     private void notifyDownloaded(UserSerial userSerial, int downloaded) {
-        for (int i = userSerial.getEpisode() - downloaded + 1; i < userSerial.getEpisode(); i++) {
+        for (int i = userSerial.getEpisode() - downloaded + 1; i <= userSerial.getEpisode(); i++) {
             UserSerialNotification notification = new UserSerialNotification();
             notification.setType(NotificationType.EPISODE_DOWNLOADED);
             notification.setEpisode(i);
