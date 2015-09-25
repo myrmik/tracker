@@ -180,6 +180,7 @@ public class MediaListView extends VerticalLayout implements View {
 
         UserSerial userSerial = new UserSerial();
         userSerial.setName(serial.getName());
+        userSerial.setEpisode(serial.getPublishEpisode());
         userSerial.setSerial(serial);
         userSerial = userSerialDao.insertUserSerial(userSerial);
         if (userSerial != null) {

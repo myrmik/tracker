@@ -108,10 +108,6 @@ public class UserSerial implements Serializable {
         return serial.getPublishDate();
     }
 
-    public void setPublishDate(LocalDateTime publishDate) {
-        serial.setPublishDate(publishDate);
-    }
-
     public Serial getSerial() {
         return serial;
     }

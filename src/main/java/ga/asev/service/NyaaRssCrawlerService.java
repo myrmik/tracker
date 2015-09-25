@@ -49,13 +49,14 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
 
     @Override
     public void updateSerialList() {
-        String query = "[HorribleSubs]+720p";
+        String query = String.format("[%s]+%s", TORRENT_OWNER, TORRENT_QUALITY);
         String url = RSS_URL_SEARCH_PREFIX + encodeUrl(query);
         String rss = downloadService.download(url);
         if (rss == null) return;
 
         List<Serial> serials = parseSerials(rss);
         serialDao.insertSerials(serials);
+        log.info("Updated serials: " + serials.size());
     }
 
     @Override
@@ -69,7 +70,8 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
 
         if (!isEmpty(episodes)) {
             downloadTorrents(episodes);
-            userSerial.setPublishDate(Episode.getMaxPubDate(episodes));
+            userSerial.getSerial().setPublishDate(Episode.getMaxPubDate(episodes));
+            userSerial.getSerial().setPublishEpisode(Episode.getMaxEpisode(episodes));
             return episodes.size();
         }
 
@@ -89,11 +91,21 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         Elements items = getRssItems(rss);
 
         Collection<Optional<Serial>> values = items.stream()
-                .map(e -> new Serial(parseItemTitle(getItemTitle(e)), getItemDate(e)))
+                .map(this::toSerial)
+                .filter(serial -> serial.getPublishEpisode() > 0)
                 .collect(groupingBy(Serial::getName, maxBySerialPublishDate()))
                 .values();
 
         return values.stream().map(e -> e.orElse(null)).collect(toList());
+    }
+
+    private Serial toSerial(Element e) {
+        Serial serial = new Serial();
+        String title = getItemTitle(e);
+        serial.setName(parseName(title));
+        serial.setPublishDate(getItemDate(e));
+        serial.setPublishEpisode(parseEpisode(title));
+        return serial;
     }
 
     private Collector<Serial, ?, Optional<Serial>> maxBySerialPublishDate() {
@@ -128,14 +140,6 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
         Document doc = Jsoup.parse(rss);
         return doc.select("rss > channel > item");
     }
-
-    private String parseItemTitle(String title) {
-        String pattern = "(?i)(.*\\[HorribleSubs\\]\\s+)(.+?)(\\s+-\\s+\\d+.*)";
-        return title.replaceAll(pattern, "$2")
-                .replaceAll("\\[" + TORRENT_OWNER + "\\]", "")
-                .replaceAll("\\[" + TORRENT_QUALITY + "\\]", "");
-    }
-
 
     private String getItemTitle(Element e) {
         return getItemProp(e, "title");
@@ -175,6 +179,10 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
 
         static LocalDateTime getMaxPubDate(List<Episode> episodes) {
             return episodes.stream().max((o1, o2) -> o1.episode.compareTo(o2.episode)).orElse(null).pubDate;
+        }
+
+        static int getMaxEpisode(List<Episode> episodes) {
+            return episodes.stream().max((o1, o2) -> o1.episode.compareTo(o2.episode)).orElse(null).episode;
         }
     }
 }

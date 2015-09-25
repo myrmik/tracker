@@ -9,20 +9,15 @@ import java.time.LocalDateTime;
 @Table(name="SERIAL")
 public class Serial implements Serializable {
 
-    public Serial() {
-    }
-
-    public Serial(String name, LocalDateTime publishDate) {
-        this.name = name;
-        this.publishDate = publishDate;
-    }
-
     @Id
     @GeneratedValue
     private Integer id;
 
     @Column
     private String name;
+
+    @Column
+    private int publishEpisode;
 
     @Column
     private LocalDateTime publishDate;
@@ -41,6 +36,14 @@ public class Serial implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getPublishEpisode() {
+        return publishEpisode;
+    }
+
+    public void setPublishEpisode(int publishEpisode) {
+        this.publishEpisode = publishEpisode;
     }
 
     public LocalDateTime getPublishDate() {
