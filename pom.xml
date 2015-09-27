@@ -21,6 +21,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+        <vaadin.plugin.version>7.5.6</vaadin.plugin.version>
     </properties>
 
     <dependencies>
@@ -84,7 +85,7 @@
             <dependency>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-bom</artifactId>
-                <version>7.5.6</version>
+                <version>${vaadin.plugin.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -96,6 +97,25 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                        </configuration>
+                        <goals>
+                            <goal>resources</goal>
+                            <goal>update-widgetset</goal>
+                            <goal>compile</goal>
+                            <goal>compile-theme</goal>
+                            <goal>update-theme</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
