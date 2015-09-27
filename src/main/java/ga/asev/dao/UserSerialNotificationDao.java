@@ -8,4 +8,5 @@ public interface UserSerialNotificationDao {
     UserSerialNotification insertNotification(UserSerialNotification notification);
     List<UserSerialNotification> selectAllNotifications();
     void deleteNotification(int id);
+    int selectUnreadCount();
 }

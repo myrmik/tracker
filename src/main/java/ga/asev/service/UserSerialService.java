@@ -2,7 +2,7 @@ package ga.asev.service;
 
 import ga.asev.dao.UserSerialDao;
 import ga.asev.dao.UserSerialNotificationDao;
-import ga.asev.event.DownloadEvent;
+import ga.asev.event.TrackerEventBus;
 import ga.asev.model.NotificationType;
 import ga.asev.model.UserSerial;
 import ga.asev.model.UserSerialNotification;
@@ -24,7 +24,7 @@ public class UserSerialService extends BaseService {
     UserSerialNotificationDao userSerialNotificationDao;
 
     @Autowired
-    DownloadEvent downloadEvent;
+    TrackerEventBus trackerEventBus;
 
     public void deleteUserSerial(UserSerial userSerial) {
         userSerialDao.deleteUserSerial(userSerial.getId());
@@ -51,7 +51,7 @@ public class UserSerialService extends BaseService {
             notification.setLastUpdated(LocalDateTime.now());
             notification.setUserSerial(userSerial);
             userSerialNotificationDao.insertNotification(notification);
-            downloadEvent.notifyObservers(notification);
+            trackerEventBus.post(notification);
         }
     }
 }

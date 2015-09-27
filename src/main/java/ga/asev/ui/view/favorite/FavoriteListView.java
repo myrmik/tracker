@@ -1,5 +1,6 @@
 package ga.asev.ui.view.favorite;
 
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.sort.SortOrder;
 import com.vaadin.data.util.BeanItemContainer;
@@ -15,13 +16,12 @@ import com.vaadin.ui.renderers.ProgressBarRenderer;
 import com.vaadin.ui.themes.ValoTheme;
 import ga.asev.dao.SerialDao;
 import ga.asev.dao.UserSerialDao;
-import ga.asev.event.DownloadEvent;
+import ga.asev.event.TrackerEventBus;
 import ga.asev.model.Serial;
 import ga.asev.model.UserSerial;
 import ga.asev.model.UserSerialNotification;
 import ga.asev.service.UserSerialService;
 import ga.asev.ui.ext.PostCommitHandler;
-import ga.asev.ui.ext.ViewDownloadListener;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -41,8 +41,6 @@ public class FavoriteListView extends VerticalLayout implements View {
     private Grid userSerials = new Grid();
     private BeanItemContainer<UserSerial> usContainer = new BeanItemContainer<>(UserSerial.class);
 
-    private ViewDownloadListener downloadListener = new ViewDownloadListener(this);
-
     @Autowired
     private UserSerialDao userSerialDao;
 
@@ -53,7 +51,7 @@ public class FavoriteListView extends VerticalLayout implements View {
     private UserSerialService userSerialService;
 
     @Autowired
-    private DownloadEvent downloadEvent;
+    TrackerEventBus trackerEventBus;
 
     @PostConstruct
     void init() {
@@ -64,8 +62,8 @@ public class FavoriteListView extends VerticalLayout implements View {
     private void configureComponents() {
         configureSerialForm();
         configureMediaListGrid();
-        addAttachListener(event -> downloadEvent.addObserver(downloadListener));
-        addDetachListener(event -> downloadEvent.deleteObserver(downloadListener));
+        addAttachListener(event -> trackerEventBus.register(this));
+        addDetachListener(event -> trackerEventBus.unregister(this));
     }
 
     private void configureMediaListGrid() {
@@ -226,4 +224,10 @@ public class FavoriteListView extends VerticalLayout implements View {
         Notification.show(notification.toString(), Notification.Type.TRAY_NOTIFICATION);
         // todo
     }
+
+    @Subscribe
+    public void postViewChange(final UserSerialNotification notification) {
+        getUI().access(() -> showNotification(notification));
+    }
+
 }

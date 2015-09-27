@@ -1,6 +1,8 @@
 package ga.asev.dao;
 
 import ga.asev.model.UserSerialNotification;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,4 +23,14 @@ public class UserSerialNotificationDaoImpl extends BaseDao<Integer, UserSerialNo
     public void deleteNotification(int id) {
         delete(id);
     }
+
+    public int selectUnreadCount() {
+        Object result = getCurrentSession()
+                .createCriteria(UserSerialNotification.class)
+                .add(Restrictions.eq("read", false))
+                .setProjection(Projections.rowCount())
+                .uniqueResult();
+        return ((Long) result).intValue();
+    }
+
 }

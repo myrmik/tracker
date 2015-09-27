@@ -7,9 +7,6 @@ public abstract class TrackerEvent {
     public static class BrowserResizeEvent {
     }
 
-    public static class NotificationsCountUpdatedEvent {
-    }
-
     public static final class PostViewChangeEvent {
         private final TrackerViewType view;
 

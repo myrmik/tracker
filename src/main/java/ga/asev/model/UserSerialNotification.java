@@ -20,6 +20,9 @@ public class UserSerialNotification implements Serializable {
     @Column
     private LocalDateTime lastUpdated;
 
+    @Column
+    private Boolean read;
+
     @ManyToOne
     @JoinColumn(name = "USER_SERIAL_ID")
     private UserSerial userSerial;
@@ -67,5 +70,13 @@ public class UserSerialNotification implements Serializable {
 
     public void setUserSerial(UserSerial userSerial) {
         this.userSerial = userSerial;
+    }
+
+    public Boolean getRead() {
+        return read;
+    }
+
+    public void setRead(Boolean read) {
+        this.read = read;
     }
 }

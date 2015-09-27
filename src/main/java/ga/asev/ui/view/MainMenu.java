@@ -6,9 +6,9 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
-import ga.asev.event.TrackerEvent.NotificationsCountUpdatedEvent;
 import ga.asev.event.TrackerEvent.PostViewChangeEvent;
 import ga.asev.event.TrackerEventBus;
+import ga.asev.model.UserSerialNotification;
 import ga.asev.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -122,8 +122,7 @@ public final class MainMenu extends CustomComponent {
     }
 
     @Subscribe
-    public void updateNotificationsCount(
-            final NotificationsCountUpdatedEvent event) {
+    public void updateNotificationsCount(final UserSerialNotification notification) {
         int unreadNotificationsCount = notificationService.getUnreadNotificationsCount();
         notificationsBadge.setValue(String.valueOf(unreadNotificationsCount));
         notificationsBadge.setVisible(unreadNotificationsCount > 0);
