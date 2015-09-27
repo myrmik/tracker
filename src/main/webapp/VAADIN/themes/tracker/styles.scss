@@ -1,0 +1,7 @@
+// Import all the mixins for this theme
+@import "tracker";
+
+.tracker {
+  // Output the actual theme selectors
+  @include tracker;
+}

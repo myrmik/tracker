@@ -27,7 +27,6 @@ public class UserSerialService extends BaseService {
     DownloadEvent downloadEvent;
 
     public void deleteUserSerial(UserSerial userSerial) {
-//        userSerial.getNotifications().clear();
         userSerialDao.deleteUserSerial(userSerial.getId());
     }
 

@@ -1,4 +1,4 @@
-package ga.asev.ui.view;
+package ga.asev.ui.view.favorite;
 
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.sort.SortOrder;
@@ -33,9 +33,9 @@ import static ga.asev.util.ThreadUtil.startThread;
 import static java.util.Collections.singletonList;
 
 @UIScope
-@SpringView(name = MediaListView.VIEW_NAME)
-public class MediaListView extends VerticalLayout implements View {
-    public static final String VIEW_NAME = "";
+@SpringView(name = FavoriteListView.NAME)
+public class FavoriteListView extends VerticalLayout implements View {
+    public static final String NAME = "Favorites";
 
     private ComboBox serialCb = new ComboBox();
     private Grid userSerials = new Grid();

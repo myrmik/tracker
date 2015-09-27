@@ -1,15 +1,15 @@
 package ga.asev.ui.ext;
 
 import ga.asev.model.UserSerialNotification;
-import ga.asev.ui.view.MediaListView;
+import ga.asev.ui.view.favorite.FavoriteListView;
 
 import java.util.Observable;
 import java.util.Observer;
 
 public class ViewDownloadListener implements Observer {
-    MediaListView view;
+    FavoriteListView view;
 
-    public ViewDownloadListener(MediaListView view) {
+    public ViewDownloadListener(FavoriteListView view) {
         this.view = view;
     }
 

@@ -1,52 +1,79 @@
 package ga.asev.ui;
 
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
-import com.vaadin.navigator.Navigator;
+import com.vaadin.navigator.View;
+import com.vaadin.navigator.ViewProvider;
+import com.vaadin.server.Page;
+import com.vaadin.server.Responsive;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringViewProvider;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
+import com.vaadin.ui.themes.ValoTheme;
+import ga.asev.event.TrackerEvent.BrowserResizeEvent;
+import ga.asev.event.TrackerEvent.CloseOpenWindowsEvent;
+import ga.asev.event.TrackerEventBus;
+import ga.asev.ui.view.MainView;
+import ga.asev.ui.view.TrackerViewType;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Theme("valo")
+@Theme("tracker")
 @SpringUI
 @Push
 public class DefaultUI extends UI {
 
+    private static final TrackerViewType ERROR_VIEW = TrackerViewType.FAVORITES;
+
     @Autowired
     private SpringViewProvider viewProvider;
 
-    private VerticalLayout root = new VerticalLayout();
-    private Panel viewContainer = new Panel();
-    private Navigator navigator = new Navigator(this, viewContainer);
+    @Autowired
+    private TrackerEventBus trackerEventBus;
+
+    @Autowired
+    private MainView mainView;
 
     @Override
     protected void init(VaadinRequest request) {
-        configureComponents();
-        buildLayout();
+        setContent(mainView);
+
+        Responsive.makeResponsive(this);
+        addStyleName(ValoTheme.UI_WITH_MENU);
+
+        initNavigator();
+        initListeners();
     }
 
-    private void configureComponents() {
+    private void initNavigator() {
+        TrackerNavigator navigator = new TrackerNavigator(this, mainView.getContentContainer(), trackerEventBus);
         navigator.addProvider(viewProvider);
+        navigator.setErrorProvider(new ViewProvider() {
+            @Override
+            public String getViewName(final String viewAndParameters) {
+                return ERROR_VIEW.getViewName();
+            }
+
+            @Override
+            public View getView(final String viewName) {
+                return viewProvider.getView(ERROR_VIEW.getViewName());
+            }
+        });
+
+        navigator.navigateTo(navigator.getState());
     }
 
-    private void buildLayout() {
-        viewContainer.setSizeFull();
-        viewContainer.setWidth("70%");
+    private void initListeners() {
+        // Some views need to be aware of browser resize events so a
+        // BrowserResizeEvent gets fired to the event bus on every occasion.
+        Page.getCurrent().addBrowserWindowResizeListener(
+                event -> trackerEventBus.post(new BrowserResizeEvent()));
+    }
 
-        root.setSizeFull();
-        root.setMargin(true);
-        root.setSpacing(true);
-
-        root.setDefaultComponentAlignment(Alignment.TOP_CENTER);
-
-        root.addComponent(viewContainer);
-        root.setExpandRatio(viewContainer, 1);
-
-        setContent(root);
+    @Subscribe
+    public void closeOpenWindows(final CloseOpenWindowsEvent event) {
+        getWindows().forEach(Window::close);
     }
 }
