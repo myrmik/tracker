@@ -7,4 +7,5 @@ import java.util.List;
 public interface SerialDao {
     void insertSerials(List<Serial> serials);
     List<Serial> selectAllSerials();
+    List<Serial> selectNewSerials();
 }

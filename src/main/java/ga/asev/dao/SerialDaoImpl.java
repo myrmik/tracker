@@ -1,6 +1,7 @@
 package ga.asev.dao;
 
 import ga.asev.model.Serial;
+import org.hibernate.criterion.Order;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -30,5 +31,14 @@ public class SerialDaoImpl extends BaseDao<Integer, Serial> implements SerialDao
     @Override
     public List<Serial> selectAllSerials() {
         return selectAll();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Serial> selectNewSerials() {
+        return getCurrentSession()
+                .createCriteria(Serial.class)
+                .addOrder(Order.asc("publishEpisode"))
+                .list();
     }
 }
