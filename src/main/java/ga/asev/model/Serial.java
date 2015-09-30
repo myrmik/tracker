@@ -4,6 +4,9 @@ package ga.asev.model;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static javax.persistence.CascadeType.ALL;
 
 @Entity
 @Table(name="SERIAL")
@@ -21,6 +24,9 @@ public class Serial implements Serializable {
 
     @Column
     private LocalDateTime publishDate;
+
+    @OneToOne(cascade = ALL, orphanRemoval = true, mappedBy="serial")
+    private SerialInfo serialInfo;
 
     public Integer getId() {
         return id;
@@ -52,6 +58,14 @@ public class Serial implements Serializable {
 
     public void setPublishDate(LocalDateTime publishDate) {
         this.publishDate = publishDate;
+    }
+
+    public SerialInfo getSerialInfo() {
+        return serialInfo;
+    }
+
+    public void setSerialInfo(SerialInfo serialInfo) {
+        this.serialInfo = serialInfo;
     }
 
     @Override

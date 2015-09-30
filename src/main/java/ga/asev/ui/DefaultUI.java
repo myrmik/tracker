@@ -20,6 +20,8 @@ import ga.asev.ui.view.MainView;
 import ga.asev.ui.view.TrackerViewType;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Locale;
+
 @Theme("tracker")
 @SpringUI
 @Push

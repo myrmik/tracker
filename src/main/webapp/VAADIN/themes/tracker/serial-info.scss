@@ -1,0 +1,17 @@
+@mixin tracker-serial-info {
+  .si-view {
+    font-family: "Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", geneva, helvetica, arial, tahoma, verdana, sans-serif;
+
+    .si-title {
+      font-size: 130%;
+      font-weight: bold;
+      padding-top: 0.5em;
+      padding-bottom: 1em;
+    }
+
+    .si-label-capture {
+      font-weight: bold;
+      width: 3.5em;
+    }
+  }
+}

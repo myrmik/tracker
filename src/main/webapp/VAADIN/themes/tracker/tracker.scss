@@ -1,5 +1,6 @@
 @import "../valo/valo";
 @import "common";
+@import "serial-info";
 
 // Optimize the CSS output
 $v-included-components: remove($v-included-components, accordion);
@@ -20,4 +21,5 @@ $valo-menu-background-color: #414B56;
 @mixin tracker {
   @include valo;
   @include tracker-common;
+  @include tracker-serial-info;
 }

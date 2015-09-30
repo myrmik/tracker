@@ -5,9 +5,14 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.spring.annotation.UIScope;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.VerticalLayout;
 import ga.asev.dao.SerialDao;
 import ga.asev.model.Serial;
+import ga.asev.model.SerialInfo;
+import ga.asev.service.ArtHtmlCrawlerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -19,7 +24,13 @@ public class SerialListView extends VerticalLayout implements View {
     public static final String NAME = "Serials";
 
     @Autowired
+    private ArtHtmlCrawlerService artHtmlCrawlerService;
+
+    @Autowired
     private SerialDao serialDao;
+
+    @Autowired
+    private SerialInfoComponent serialInfoComponent;
 
     BeanItemContainer<Serial> serialContainer = new BeanItemContainer<>(Serial.class);
     private Grid serials = new Grid();
@@ -40,21 +51,12 @@ public class SerialListView extends VerticalLayout implements View {
         horizontalLayout.setSizeFull();
         horizontalLayout.setSpacing(true);
 
-        Component serialInfoLayout = buildSerialInfoLayout();
-        horizontalLayout.addComponent(serialInfoLayout);
-        horizontalLayout.setExpandRatio(serialInfoLayout, 1);
+        horizontalLayout.addComponent(serialInfoComponent);
+        horizontalLayout.setExpandRatio(serialInfoComponent, 1);
 
         horizontalLayout.addComponent(serials);
 
         addComponent(horizontalLayout);
-    }
-
-    private Component buildSerialInfoLayout() {
-        VerticalLayout verticalLayout = new VerticalLayout();
-        verticalLayout.setSizeFull();
-        Panel panelWrap = new Panel(verticalLayout);
-        panelWrap.setSizeFull();
-        return panelWrap;
     }
 
     private void configureComponents() {
@@ -98,11 +100,21 @@ public class SerialListView extends VerticalLayout implements View {
         List<Serial> serials = serialDao.selectNewSerials();
         serialContainer.removeAllItems();
         serialContainer.addAll(serials);
+        this.serials.select(serials.get(0));
     }
 
     private void onEpisodeSelect(Serial serial) {
         if (serial == null) return;
-        // todo
+
+        SerialInfo serialInfo = serial.getSerialInfo();
+        if (serialInfo == null) {
+            serialInfo = artHtmlCrawlerService.findSerialInfo(serial);
+        }
+
+        serialInfoComponent.refresh(serialInfo);
+
+        // todo add manual serial info choose
+
     }
 
 

@@ -23,6 +23,10 @@ public class SerialDaoImpl extends BaseDao<Integer, Serial> implements SerialDao
         if (storedSerial != null) {
             storedSerial.setPublishDate(serial.getPublishDate());
             storedSerial.setPublishEpisode(serial.getPublishEpisode());
+            if (serial.getSerialInfo() != null) {
+                storedSerial.setSerialInfo(serial.getSerialInfo());
+                storedSerial.getSerialInfo().setSerial(storedSerial);
+            }
             return storedSerial;
         }
         return serial;
