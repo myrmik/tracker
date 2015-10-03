@@ -3,23 +3,18 @@ package ga.asev.service;
 import ga.asev.dao.SerialDao;
 import ga.asev.model.Serial;
 import ga.asev.model.SerialInfo;
-import ga.asev.util.StringUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 import static ga.asev.util.StringUtil.encodeUrl;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
 
 @Service
 public class ArtHtmlCrawlerService extends BaseService {
@@ -28,7 +23,8 @@ public class ArtHtmlCrawlerService extends BaseService {
     private static final String ROOT_URL = "http://www.world-art.ru";
     private static final String URL_SEARCH_PREFIX = ROOT_URL + "/search.php?global_sector=animation&public_search=";
 
-    private static final String SERIAL_TYPE_PATTERN = new String("(?i).*Тип.*\\((\\d+)\\s+.*\\s+(\\d+) мин.*".getBytes(), Charset.forName("UTF-8"));
+    private static final String SERIAL_TYPE_PATTERN = "(?i).*Тип.*\\(.*(\\d+)\\s+.*\\s+(\\d+) мин.*";
+    private static final String SERIAL_TYPE_PATTERN_UTF = new String(SERIAL_TYPE_PATTERN.getBytes(), Charset.forName("UTF-8"));
 
     @Autowired
     private DownloadService downloadService;
@@ -56,11 +52,11 @@ public class ArtHtmlCrawlerService extends BaseService {
     }
 
     private String cutSerialName(String name) {
-        String[] s = name.split(" ");
+        String[] s = name.replaceAll("-", "").split(" ");
         if (s.length <= 3) return null;
-        String cutName = Stream.of(s)
-                .filter(str -> str.length() > 2)
-                .limit(3)
+        String cutName = IntStream.range(0, s.length)
+                .filter(i -> s[i].length() > 2 || (i > 0 && i < s.length - 1))
+                .mapToObj(i -> s[i])
                 .collect(joining(" "));
         if (cutName.equals(name)) return null;
         return cutName;
@@ -115,8 +111,15 @@ public class ArtHtmlCrawlerService extends BaseService {
         String genre = info.select("font[size=2] a[href=http://www.world-art.ru/animation/list.php]").first().text().trim();
 
         String infoText = info.select("td[valign=top] > font[size=2]").text();
-        int size = Integer.valueOf(infoText.replaceAll(SERIAL_TYPE_PATTERN, "$1"));
-        int duration = Integer.valueOf(infoText.replaceAll(SERIAL_TYPE_PATTERN, "$2"));
+
+        int size, duration;
+        try {
+            size = Integer.valueOf(infoText.replaceAll(SERIAL_TYPE_PATTERN_UTF, "$1"));
+            duration = Integer.valueOf(infoText.replaceAll(SERIAL_TYPE_PATTERN_UTF, "$2"));
+        } catch (NumberFormatException e) {
+            size = Integer.valueOf(infoText.replaceAll(SERIAL_TYPE_PATTERN, "$1"));
+            duration = Integer.valueOf(infoText.replaceAll(SERIAL_TYPE_PATTERN, "$2"));
+        }
 
         SerialInfo serialInfo = new SerialInfo();
         serialInfo.setName(name);
