@@ -21,7 +21,7 @@ public class UserSerialNotification implements Serializable {
     private LocalDateTime lastUpdated;
 
     @Column
-    private Boolean read;
+    private Boolean read = false;
 
     @ManyToOne
     @JoinColumn(name = "USER_SERIAL_ID")
