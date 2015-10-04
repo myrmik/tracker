@@ -23,7 +23,7 @@ public class ArtHtmlCrawlerService extends BaseService {
     private static final String ROOT_URL = "http://www.world-art.ru";
     private static final String URL_SEARCH_PREFIX = ROOT_URL + "/search.php?global_sector=animation&public_search=";
 
-    private static final String SERIAL_TYPE_PATTERN = "(?i).*Тип.*\\(.*(\\d+)\\s+.*\\s+(\\d+) мин.*";
+    private static final String SERIAL_TYPE_PATTERN = "(?i).*Тип.*\\(>*(\\d+)\\s+.*\\s+(\\d+) мин.*";
     private static final String SERIAL_TYPE_PATTERN_UTF = new String(SERIAL_TYPE_PATTERN.getBytes(), Charset.forName("UTF-8"));
 
     @Autowired
@@ -52,7 +52,10 @@ public class ArtHtmlCrawlerService extends BaseService {
     }
 
     private String cutSerialName(String name) {
-        String[] s = name.replaceAll("-", "").split(" ");
+        String[] s = name
+                .replaceAll("-", "")
+                .replaceAll(" S\\d+", " ")
+                .split(" ");
         if (s.length <= 3) return null;
         String cutName = IntStream.range(0, s.length)
                 .filter(i -> s[i].length() > 2 || (i > 0 && i < s.length - 1))
