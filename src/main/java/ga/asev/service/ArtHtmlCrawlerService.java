@@ -56,7 +56,6 @@ public class ArtHtmlCrawlerService extends BaseService {
                 .replaceAll("-", "")
                 .replaceAll(" S\\d+", " ")
                 .split(" ");
-        if (s.length <= 3) return null;
         String cutName = IntStream.range(0, s.length)
                 .filter(i -> s[i].length() > 2 || (i > 0 && i < s.length - 1))
                 .mapToObj(i -> s[i])
