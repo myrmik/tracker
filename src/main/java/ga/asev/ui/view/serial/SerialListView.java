@@ -69,6 +69,7 @@ public class SerialListView extends VerticalLayout implements View {
         serials.setColumnOrder("name", "publishEpisode");
         serials.removeColumn("id");
         serials.removeColumn("publishDate");
+        serials.removeColumn("serialInfo");
 
         serials.setWidth("320px");
         serials.setHeight("100%");

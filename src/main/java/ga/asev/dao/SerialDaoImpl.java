@@ -42,7 +42,7 @@ public class SerialDaoImpl extends BaseDao<Integer, Serial> implements SerialDao
     public List<Serial> selectNewSerials() {
         return getCurrentSession()
                 .createCriteria(Serial.class)
-                .addOrder(Order.asc("publishEpisode"))
+                .addOrder(Order.desc("publishDate"))
                 .list();
     }
 }
