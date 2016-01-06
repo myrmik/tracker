@@ -1,6 +1,7 @@
 package ga.asev.ui.view.serial;
 
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.UIScope;
@@ -8,10 +9,14 @@ import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 import ga.asev.model.SerialComment;
 import ga.asev.model.SerialInfo;
+import ga.asev.util.StringUtil;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import static ga.asev.util.StringUtil.isEmpty;
 
 @UIScope
 @SpringComponent
@@ -24,6 +29,9 @@ public class SerialInfoComponent extends Panel {
     private Image companyLogoImg = new Image();
     private Label summaryLabel = new Label();
     private VerticalLayout commentsLt = new VerticalLayout();
+    private Label summaryCaption = new BoldLabel("Summary");
+    private Label commentSeparator = new HorizontalSeparator();
+    private Label commentCaption = new BoldLabel("Comments");
 
     private Component content;
 
@@ -56,13 +64,17 @@ public class SerialInfoComponent extends Panel {
 
     private Panel getSummaryPanel() {
         VerticalLayout summaryLt = new VerticalLayout(
-                new BoldLabel("Summary"),
+                summaryCaption,
                 summaryLabel,
-                new BoldLabel("Comments"),
+                commentSeparator,
+                commentCaption,
                 commentsLt
         );
         summaryLt.setSpacing(true);
         summaryLt.setMargin(true);
+        commentsLt.setSpacing(true);
+        commentsLt.addStyleName("si-label-text");
+        summaryLabel.addStyleName("si-label-text");
         Panel summaryPanel = new Panel(summaryLt);
         summaryPanel.setHeight(25, Unit.EM);
         summaryPanel.addStyleName(ValoTheme.PANEL_BORDERLESS);
@@ -108,24 +120,49 @@ public class SerialInfoComponent extends Panel {
         typeLabel.setValue(serialInfo.getSize() + " ep, " + serialInfo.getDuration() + " min");
         posterImg.setSource(new ExternalResource(serialInfo.getPosterUrl()));
         companyLogoImg.setSource(new ExternalResource(serialInfo.getCompanyLogoUrl()));
+
         summaryLabel.setValue(serialInfo.getSummary());
+        boolean summaryVisible = (!isEmpty(serialInfo.getSummary()));
+        summaryCaption.setVisible(summaryVisible);
+        summaryLabel.setVisible(summaryVisible);
+        commentSeparator.setVisible(summaryVisible);
 
         refreshComments(serialInfo.getComments());
     }
 
     private void refreshComments(List<SerialComment> comments) {
-        if (comments == null) return;
+        boolean commentVisible = !CollectionUtils.isEmpty(comments);
+        commentCaption.setVisible(commentVisible);
+        commentsLt.setVisible(commentVisible);
+        if (!commentVisible) {
+            return;
+        }
         comments.forEach(comment -> {
-            HorizontalLayout commentHeader = new HorizontalLayout();
-            commentHeader.addComponent(new BoldLabel(comment.getAuthor()));
-            EmptyLabel emptyLabel = new EmptyLabel();
-            commentHeader.addComponent(emptyLabel);
-            Label dateLabel = new Label(comment.getPublishDate().format(commentDateFormatter));
-            commentHeader.addComponent(dateLabel);
-            commentHeader.setExpandRatio(emptyLabel, 1);
-            commentsLt.addComponent(commentHeader);
+            commentsLt.addComponent(createCommentHeader(comment));
             commentsLt.addComponent(new Label(comment.getContent()));
+            commentsLt.addComponent(new HorizontalSeparator());
         });
+    }
+
+    private Component createCommentHeader(SerialComment comment) {
+        HorizontalLayout commentHeader = new HorizontalLayout();
+        commentHeader.addComponent(new BoldLabel(comment.getAuthor()));
+
+        Label dateLabel = new Label(commentDateToString(comment));
+        EmptyLabel emptyLabel = new EmptyLabel();
+        HorizontalLayout dateLt = new HorizontalLayout(emptyLabel, dateLabel);
+        dateLt.setExpandRatio(emptyLabel, 0.8f);
+        dateLt.setExpandRatio(dateLabel, 0.2f);
+        dateLt.setWidth(100, Unit.PERCENTAGE);
+        commentHeader.addComponent(dateLt);
+
+        commentHeader.setWidth(100, Unit.PERCENTAGE);
+        return commentHeader;
+    }
+
+    private String commentDateToString(SerialComment comment) {
+        if (comment.getPublishDate() == null) return null;
+        return comment.getPublishDate().format(commentDateFormatter);
     }
 
     private class SiLabel extends Label {
@@ -143,8 +180,13 @@ public class SerialInfoComponent extends Panel {
 
     private class BoldLabel extends Label {
         public BoldLabel(String content) {
-            super(content);
-            addStyleName(ValoTheme.LABEL_BOLD);
+            super("<b>" + content + "</b>", ContentMode.HTML);
+        }
+    }
+
+    private class HorizontalSeparator extends Label {
+        public HorizontalSeparator() {
+            super("<hr />", ContentMode.HTML);
         }
     }
 

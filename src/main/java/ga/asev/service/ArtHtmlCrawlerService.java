@@ -11,13 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -155,6 +153,7 @@ public class ArtHtmlCrawlerService extends BaseService {
     private List<SerialComment> parseComments(String commentPageUrl) {
         String commentPageHtml = downloadService.download(commentPageUrl);
         if (commentPageHtml == null) return null;
+        if (!commentPageHtml.contains("ongoing_bot")) return null;
 
         Document commentPageDoc = Jsoup.parse(commentPageHtml);
         String ongoingCommentPageUrl = commentPageDoc.select("a[href^=comment_answer.php]").attr("href");
@@ -176,11 +175,19 @@ public class ArtHtmlCrawlerService extends BaseService {
             SerialComment comment = new SerialComment();
             comment.setAuthor(commentRows.get(i).text());
             String dateStr = commentRows.get(i + 1).text();
-            comment.setPublishDate(LocalDateTime.of(LocalDate.parse(dateStr, commentDateFormatter), LocalTime.MIDNIGHT));
+            comment.setPublishDate(parseCommentPublishDate(dateStr));
             comment.setContent(commentRows.get(i + 2).text());
             result.add(comment);
         }
         return result;
+    }
+
+    private LocalDateTime parseCommentPublishDate(String dateStr) {
+        try {
+            return LocalDateTime.of(LocalDate.parse(dateStr, commentDateFormatter), LocalTime.MIDNIGHT);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 
