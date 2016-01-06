@@ -2,6 +2,7 @@ package ga.asev.service;
 
 import ga.asev.dao.SerialDao;
 import ga.asev.model.Serial;
+import ga.asev.model.SerialComment;
 import ga.asev.model.SerialInfo;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,6 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static ga.asev.util.StringUtil.encodeUrl;
@@ -21,10 +30,13 @@ public class ArtHtmlCrawlerService extends BaseService {
 
 
     private static final String ROOT_URL = "http://www.world-art.ru";
+    private static final String ANIMATION_URL = "http://www.world-art.ru/animation/";
     private static final String URL_SEARCH_PREFIX = ROOT_URL + "/search.php?global_sector=animation&public_search=";
 
     private static final String SERIAL_TYPE_PATTERN = "(?i).*Тип.*\\(>*(\\d+)\\s+.*\\s+(\\d+) мин.*";
     private static final String SERIAL_TYPE_PATTERN_UTF = new String(SERIAL_TYPE_PATTERN.getBytes(), Charset.forName("UTF-8"));
+
+    private static final DateTimeFormatter commentDateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
     @Autowired
     private DownloadService downloadService;
@@ -114,6 +126,11 @@ public class ArtHtmlCrawlerService extends BaseService {
 
         String infoText = info.select("td[valign=top] > font[size=2]").text();
 
+        String summary = info.select("p[align=justify].review").text();
+
+        String commentPageUrl = info.select("a[href$=action=2]").attr("href");
+        List<SerialComment> comments = parseComments(commentPageUrl);
+
         int size, duration;
         try {
             size = Integer.valueOf(infoText.replaceAll(SERIAL_TYPE_PATTERN_UTF, "$1"));
@@ -130,7 +147,41 @@ public class ArtHtmlCrawlerService extends BaseService {
         serialInfo.setDuration(duration);
         serialInfo.setPosterUrl(posterUrl);
         serialInfo.setCompanyLogoUrl(companyLogoUrl);
+        serialInfo.setSummary(summary);
+        serialInfo.setComments(comments);
         return serialInfo;
     }
+
+    private List<SerialComment> parseComments(String commentPageUrl) {
+        String commentPageHtml = downloadService.download(commentPageUrl);
+        if (commentPageHtml == null) return null;
+
+        Document commentPageDoc = Jsoup.parse(commentPageHtml);
+        String ongoingCommentPageUrl = commentPageDoc.select("a[href^=comment_answer.php]").attr("href");
+
+        List<SerialComment> ongoingComments = parseOngoingComments(ANIMATION_URL + ongoingCommentPageUrl);
+
+        return ongoingComments;
+    }
+
+    private List<SerialComment> parseOngoingComments(String ongoingCommentsPageUrl) {
+        List<SerialComment> result = new ArrayList<>();
+
+        String ongoingCommentPageHtml = downloadService.download(ongoingCommentsPageUrl);
+        if (ongoingCommentPageHtml == null) return result;
+
+        Document ongoingCommentPageDoc = Jsoup.parse(ongoingCommentPageHtml);
+        Elements commentRows = ongoingCommentPageDoc.select("td > font[size=2]");
+        for (int i = 0; i < commentRows.size(); i += 3) {
+            SerialComment comment = new SerialComment();
+            comment.setAuthor(commentRows.get(i).text());
+            String dateStr = commentRows.get(i + 1).text();
+            comment.setPublishDate(LocalDateTime.of(LocalDate.parse(dateStr, commentDateFormatter), LocalTime.MIDNIGHT));
+            comment.setContent(commentRows.get(i + 2).text());
+            result.add(comment);
+        }
+        return result;
+    }
+
 
 }

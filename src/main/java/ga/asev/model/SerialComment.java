@@ -22,6 +22,11 @@ public class SerialComment implements Serializable {
     @Column
     private LocalDateTime publishDate;
 
+    @ManyToOne
+    @JoinColumn(name = "SERIAL_INFO_ID")
+    private SerialInfo serialInfo;
+
+
     public Integer getId() {
         return id;
     }
@@ -52,5 +57,13 @@ public class SerialComment implements Serializable {
 
     public void setPublishDate(LocalDateTime publishDate) {
         this.publishDate = publishDate;
+    }
+
+    public SerialInfo getSerialInfo() {
+        return serialInfo;
+    }
+
+    public void setSerialInfo(SerialInfo serialInfo) {
+        this.serialInfo = serialInfo;
     }
 }

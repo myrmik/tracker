@@ -107,7 +107,8 @@ public class SerialListView extends VerticalLayout implements View {
     private void onEpisodeSelect(Serial serial) {
         if (serial == null) return;
 
-        SerialInfo serialInfo = serial.getSerialInfo();
+//        SerialInfo serialInfo = serial.getSerialInfo();
+        SerialInfo serialInfo = null;
         if (serialInfo == null) {
             serialInfo = artHtmlCrawlerService.findSerialInfo(serial);
         }

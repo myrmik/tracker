@@ -33,6 +33,9 @@ public class SerialInfo implements Serializable {
     @Column
     private String companyLogoUrl;
 
+    @Column
+    private String summary;
+
     @OneToOne(cascade = ALL, orphanRemoval = true)
     @JoinColumn(name="SERIAL_ID")
     private Serial serial;
@@ -110,6 +113,20 @@ public class SerialInfo implements Serializable {
     }
 
     public void setComments(List<SerialComment> comments) {
+        if (comments != null) {
+            for (SerialComment comment : comments) {
+                comment.setSerialInfo(this);
+            }
+        }
+
         this.comments = comments;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 }
