@@ -27,7 +27,7 @@ public class UserSerial implements Serializable {
     @Column
     private LocalDateTime lastUpdated;
 
-    @OneToOne(fetch=FetchType.EAGER, cascade = ALL)
+    @OneToOne(fetch=FetchType.EAGER)
     @JoinColumn(name="SERIAL_ID")
     private Serial serial;
 
