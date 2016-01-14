@@ -123,7 +123,7 @@ public class NyaaRssCrawlerService extends BaseService implements NyaaCrawlerSer
     }
 
     private boolean matchEpisode(UserSerial userSerial, Episode e) {
-        return e.name.equals(userSerial.getOriginalName()) && e.episode > userSerial.getEpisode();
+        return e.name.equalsIgnoreCase(userSerial.getOriginalName()) && e.episode > userSerial.getEpisode();
     }
 
     private Episode toEpisode(Element item) {
